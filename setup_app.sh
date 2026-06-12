@@ -63,7 +63,7 @@ fi
 echo "Setting up virtual environment and installing openhms800..."
 uv venv
 source .venv/bin/activate
-uv pip install git+https://github.com/MichaelMay81/openhms800.git
+uv pip install --refresh git+https://github.com/MichaelMay81/openhms800.git
 
 echo ""
 echo "Phase 1 Complete."

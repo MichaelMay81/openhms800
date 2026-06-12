@@ -11,20 +11,29 @@ A lightweight, asynchronous service for monitoring Hoymiles HMS-800-2WB microinv
 - **Robust:** Automatic reconnection and persistent configuration.
 
 ## Installation
-The service is designed for deployment on a Raspberry Pi. You can install it by downloading and running the deployment script:
+The service is designed for deployment on a Raspberry Pi. The installation is split into two phases:
 
-```bash
-mkdir openhms800 && cd openhms800
-curl -sSL https://raw.githubusercontent.com/MichaelMay81/openhms800/master/deploy.sh -o deploy.sh
-chmod +x deploy.sh
-./deploy.sh
-```
+### Phase 1: Application Setup (Run as the service user)
+1. Create a directory and download the setup script:
+   ```bash
+   mkdir openhms800 && cd openhms800
+   curl -sSL https://raw.githubusercontent.com/MichaelMay81/openhms800/master/setup_app.sh -o setup_app.sh
+   chmod +x setup_app.sh
+   ./setup_app.sh
+   ```
 
-The script will:
-1. Install `uv` if missing.
-2. Create a virtual environment.
-3. Install the `openhms800` service and `hms800-ble` library from GitHub.
-4. Fetch and configure the systemd service with dynamic paths.
+### Phase 2: System Integration (Run with sudo)
+1. Download and run the systemd setup script:
+   ```bash
+   curl -sSL https://raw.githubusercontent.com/MichaelMay81/openhms800/master/setup_systemd.sh -o setup_systemd.sh
+   chmod +x setup_systemd.sh
+   sudo ./setup_systemd.sh
+   ```
+
+The scripts will:
+1. Verify system dependencies and resources.
+2. Create a virtual environment and install the service from GitHub.
+3. Configure the systemd service with dynamic paths and user detection.
 
 ## Configuration
 Settings are managed in `config.json` (created in the installation directory). You can modify these via the **Settings** tab in the Web UI, which also includes a button to restart the service to apply changes.
