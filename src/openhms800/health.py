@@ -3,7 +3,7 @@ import time
 import os
 import platform
 
-SERVICE_VERSION = "0.1.0"
+SERVICE_VERSION = "0.2.0"
 
 def get_cpu_temp():
     try:

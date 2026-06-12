@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "openhms800"
-version = "0.1.0"
+version = "0.2.0"
 description = "OpenHMS-800 web service."
 dependencies = [
     "aiohttp",
@@ -27,7 +27,7 @@ dependencies = [
 openhms800 = "openhms800.main:main"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 
 [tool.setuptools.package-data]
 openhms800 = ["templates/*", "static/*"]

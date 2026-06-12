@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=SEARCH_USER
 WorkingDirectory=SEARCH_DIR
-ExecStart=SEARCH_DIR/.venv/bin/openhms800
+ExecStart=SEARCH_DIR/.venv/bin/python3 -m openhms800.main
 Restart=always
 RestartSec=10
 
