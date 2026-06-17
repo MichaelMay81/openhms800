@@ -18,15 +18,27 @@
             <div class="card-body">
                 <div class="metric-row">
                     <span class="metric-label">Today</span>
-                    <span class="metric-value" style="color: var(--accent-green);">{{ "%.3f"|format(metrics.daily_energy) }} kWh</span>
+                    <span class="metric-value" style="color: var(--accent-green);">
+                        {% if metrics.daily_energy < 1.0 %}
+                            {{ (metrics.daily_energy * 1000)|round|int }} Wh
+                        {% else %}
+                            {{ "%.3f"|format(metrics.daily_energy) }} kWh
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="metric-row">
                     <span class="metric-label">Total</span>
-                    <span class="metric-value">--- kWh</span>
+                    <span class="metric-value">
+                        {% if metrics.total_energy < 1.0 %}
+                            {{ (metrics.total_energy * 1000)|round|int }} Wh
+                        {% else %}
+                            {{ "%.2f"|format(metrics.total_energy) }} kWh
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="metric-row" style="margin-top: 1rem;">
                     <span class="metric-label">Efficiency</span>
-                    <span class="metric-value">--- %</span>
+                    <span class="metric-value">{{ "%.1f"|format(metrics.efficiency) }} %</span>
                 </div>
             </div>
         </div>
@@ -49,6 +61,16 @@
                         <div class="metric-row">
                             <span class="metric-label">Current</span>
                             <span class="metric-value">{{ "%.2f"|format(pv.current) }} A</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Yield Today</span>
+                            <span class="metric-value">
+                                {% if pv.daily_energy < 1.0 %}
+                                    {{ (pv.daily_energy * 1000)|round|int }} Wh
+                                {% else %}
+                                    {{ "%.3f"|format(pv.daily_energy) }} kWh
+                                {% endif %}
+                            </span>
                         </div>
                     </div>
                 </div>

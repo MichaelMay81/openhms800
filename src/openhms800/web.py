@@ -54,7 +54,7 @@ async def api_settings_post(request):
         # Update config object
         config.ble_address = data.get("ble_address", config.ble_address)
         config.inverter_sn = data.get("inverter_sn", config.inverter_sn)
-        config.activation_id = data.get("activation_id", config.activation_id)
+        config.inverter_pin = data.get("inverter_pin", config.inverter_pin)
         config.scan_interval = int(data.get("scan_interval", config.scan_interval))
         config.mqtt_enabled = data.get("mqtt_enabled") == "on"
         config.mqtt_broker = data.get("mqtt_broker", config.mqtt_broker)
@@ -76,20 +76,17 @@ async def api_restart(request):
     state = request.app["state"]
     await state.add_log("WARNING", "Restart requested via Web UI...")
     
-    # Schedule restart after a small delay to allow response to be sent
-    async def do_restart():
+    # In a proper systemd setup, we just exit and let systemd restart us.
+    # To support manual runs, we'll schedule a graceful exit.
+    async def do_graceful_exit():
         await asyncio.sleep(1)
-        import sys
         import os
-        await state.add_log("INFO", "Re-executing process...")
-        # If run with -m service.main, we need to reconstruct the call
-        # os.execv expects the executable path and a list of arguments starting with the executable
-        python = sys.executable
-        os.environ['PYTHONPATH'] = os.getcwd()
-        os.execv(python, [python, '-m', 'service.main'])
+        import signal
+        # Send SIGTERM to ourselves to trigger the graceful shutdown logic in main.py
+        os.kill(os.getpid(), signal.SIGTERM)
 
-    asyncio.create_task(do_restart())
-    return web.Response(text="<span style='color: var(--accent-blue);'>Restarting... please refresh in a few seconds.</span>", content_type='text/html')
+    asyncio.create_task(do_graceful_exit())
+    return web.Response(text="<span style='color: var(--accent-blue);'>Graceful restart initiated... check logs/status in a few seconds.</span>", content_type='text/html')
 
 from .health import get_system_health
 

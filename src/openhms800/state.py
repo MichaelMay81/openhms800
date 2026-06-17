@@ -5,10 +5,12 @@ from typing import List
 from .models import InverterMetrics, LogEntry, InverterInfo
 
 class SharedState:
-    def __init__(self, log_file="service.log"):
+    def __init__(self):
         self.metrics = InverterMetrics()
         self.inverter_info = InverterInfo()
-        self.log_file = log_file
+        self._logs: List[LogEntry] = []
+        self.max_logs = 200
+        self.last_error = "None"
         self.lock = asyncio.Lock()
 
     async def update_metrics(self, inverter_info=None, **kwargs):
@@ -26,23 +28,24 @@ class SharedState:
                 info_data["last_update"] = time.time()
                 self.inverter_info = InverterInfo.model_validate(info_data)
 
+    async def update_error(self, error_msg: str):
+        async with self.lock:
+            self.last_error = error_msg
+
     async def add_log(self, level: str, message: str):
+
         async with self.lock:
             timestamp = time.time()
-            entry = f"{timestamp}|{level}|{message}\n"
-            with open(self.log_file, "a") as f:
-                f.write(entry)
+            entry = LogEntry(timestamp=timestamp, level=level, message=message)
+            self._logs.append(entry)
+            
+            # Keep only the last N logs
+            if len(self._logs) > self.max_logs:
+                self._logs = self._logs[-self.max_logs:]
+                
             print(f"[{level}] {message}")
 
     @property
     def logs(self) -> List[LogEntry]:
-        entries = []
-        if os.path.exists(self.log_file):
-            with open(self.log_file, "r") as f:
-                # Get last 100 lines
-                lines = f.readlines()[-100:]
-                for line in lines:
-                    parts = line.strip().split("|")
-                    if len(parts) == 3:
-                        entries.append(LogEntry(timestamp=float(parts[0]), level=parts[1], message=parts[2]))
-        return entries
+        # Return a copy to avoid modification during iteration
+        return list(self._logs)

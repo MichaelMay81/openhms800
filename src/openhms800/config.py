@@ -11,7 +11,7 @@ import os
 class AppConfig(BaseSettings):
     ble_address: str = ""
     inverter_sn: str = ""
-    activation_id: str = ""
+    inverter_pin: str = ""
     
     mqtt_enabled: bool = False
     mqtt_broker: str = "192.168.66.102"

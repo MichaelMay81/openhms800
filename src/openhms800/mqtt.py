@@ -40,7 +40,14 @@ class MQTTTask:
                             qos=self.config.mqtt_qos
                         )
                         
-                        # 2. Publish Metrics only if connected
+                        # 2. Publish last error
+                        await client.publish(
+                            f"{self.config.mqtt_prefix}/{self.config.inverter_sn}/last_error",
+                            self.state.last_error,
+                            qos=self.config.mqtt_qos
+                        )
+                        
+                        # 3. Publish Metrics only if connected
                         if self.state.metrics.is_connected:
                             payload = self.state.metrics.model_dump_json()
                             await client.publish(

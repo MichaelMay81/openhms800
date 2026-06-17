@@ -15,7 +15,7 @@ from .web import setup_routes
 def main():
     try:
         asyncio.run(run_main())
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         pass
 
 async def run_main():
@@ -41,26 +41,45 @@ async def run_main():
     inverter_task = InverterTask(config, state)
     mqtt_task = MQTTTask(config, state)
 
-    # Run the web server and background tasks concurrently
+    # Setup Shutdown Handling
+    stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            loop.add_signal_handler(sig, stop_event.set)
+        except NotImplementedError:
+            pass
+
+    # Run the web server
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", config.web_port)
+    await site.start()
 
     await state.add_log("INFO", f"Web UI available at http://localhost:{config.web_port}")
 
-    # Start tasks
-    tasks = [
-        site.start(),
-        inverter_task.run(),
-        mqtt_task.run()
+    # Start background tasks
+    bg_tasks = [
+        asyncio.create_task(inverter_task.run()),
+        asyncio.create_task(mqtt_task.run())
     ]
 
+    # Wait for stop signal
     try:
-        await asyncio.gather(*tasks)
+        await stop_event.wait()
     except asyncio.CancelledError:
-        await state.add_log("INFO", "Service shutting down...")
-    finally:
-        inverter_task.stop()
-        mqtt_task.stop()
-        await runner.cleanup()
+        pass
+
+    await state.add_log("INFO", "Service shutting down gracefully...")
+    
+    # Signal tasks to stop
+    inverter_task.stop()
+    mqtt_task.stop()
+
+    # Wait for tasks to finish (includes BLE disconnect sequence)
+    await asyncio.gather(*bg_tasks, return_exceptions=True)
+    await runner.cleanup()
+
+if __name__ == "__main__":
+    main()
 
